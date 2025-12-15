@@ -213,10 +213,10 @@ export const interviewResolvers = {
     interviewScheduled: {
       subscribe: (_: unknown, args: { applicationId?: string }) => {
         if (args.applicationId) {
+          const iterator = pubsub.asyncIterator([INTERVIEW_SCHEDULED]);
           return {
             [Symbol.asyncIterator]: () => ({
-              async next() {
-                const iterator = pubsub.asyncIterator([INTERVIEW_SCHEDULED]);
+              async next(): Promise<IteratorResult<unknown>> {
                 const result = await iterator.next();
 
                 if (
@@ -227,10 +227,10 @@ export const interviewResolvers = {
                 }
                 return this.next();
               },
-              return() {
+              return(): Promise<IteratorResult<unknown>> {
                 return Promise.resolve({ value: undefined, done: true });
               },
-              throw(error: Error) {
+              throw(error: Error): Promise<never> {
                 return Promise.reject(error);
               },
             }),

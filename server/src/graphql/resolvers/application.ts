@@ -16,7 +16,7 @@ export const pubsub = new PubSub();
 export const APPLICATION_CREATED = 'APPLICATION_CREATED';
 export const APPLICATION_STATUS_UPDATED = 'APPLICATION_STATUS_UPDATED';
 
-interface ApplicationFilters {
+export interface ApplicationFilters {
   vacancyId?: string;
   candidateId?: string;
   status?: string;
@@ -162,11 +162,15 @@ export const applicationResolvers = {
       // Create notification for HR who posted the vacancy
       const hrUser = await User.findById(vacancy.createdBy);
       if (hrUser) {
+        const candidateUser = await User.findById(user.id);
+        const candidateName = candidateUser
+          ? `${candidateUser.firstName} ${candidateUser.lastName}`
+          : 'A candidate';
         const notification = new Notification({
           recipient: hrUser._id,
           type: 'APPLICATION_RECEIVED',
           title: 'New Application',
-          message: `${user.firstName} ${user.lastName} applied for ${vacancy.title}`,
+          message: `${candidateName} applied for ${vacancy.title}`,
           relatedApplication: application._id,
           relatedVacancy: vacancy._id,
         });
@@ -264,10 +268,10 @@ export const applicationResolvers = {
     applicationCreated: {
       subscribe: (_: unknown, args: { vacancyId?: string }) => {
         if (args.vacancyId) {
+          const iterator = pubsub.asyncIterator([APPLICATION_CREATED]);
           return {
             [Symbol.asyncIterator]: () => ({
-              async next() {
-                const iterator = pubsub.asyncIterator([APPLICATION_CREATED]);
+              async next(): Promise<IteratorResult<unknown>> {
                 const result = await iterator.next();
 
                 if (result.value?.applicationCreated?.vacancy?.toString() === args.vacancyId) {
@@ -275,10 +279,10 @@ export const applicationResolvers = {
                 }
                 return this.next();
               },
-              return() {
+              return(): Promise<IteratorResult<unknown>> {
                 return Promise.resolve({ value: undefined, done: true });
               },
-              throw(error: Error) {
+              throw(error: Error): Promise<never> {
                 return Promise.reject(error);
               },
             }),
@@ -291,10 +295,10 @@ export const applicationResolvers = {
     applicationStatusUpdated: {
       subscribe: (_: unknown, args: { candidateId?: string }) => {
         if (args.candidateId) {
+          const iterator = pubsub.asyncIterator([APPLICATION_STATUS_UPDATED]);
           return {
             [Symbol.asyncIterator]: () => ({
-              async next() {
-                const iterator = pubsub.asyncIterator([APPLICATION_STATUS_UPDATED]);
+              async next(): Promise<IteratorResult<unknown>> {
                 const result = await iterator.next();
 
                 if (result.value?.applicationStatusUpdated?.candidate?.toString() === args.candidateId) {
@@ -302,10 +306,10 @@ export const applicationResolvers = {
                 }
                 return this.next();
               },
-              return() {
+              return(): Promise<IteratorResult<unknown>> {
                 return Promise.resolve({ value: undefined, done: true });
               },
-              throw(error: Error) {
+              throw(error: Error): Promise<never> {
                 return Promise.reject(error);
               },
             }),

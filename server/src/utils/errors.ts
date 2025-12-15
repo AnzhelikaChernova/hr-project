@@ -1,4 +1,4 @@
-import { GraphQLError } from 'graphql';
+import { GraphQLError, GraphQLFormattedError } from 'graphql';
 
 export class AppError extends GraphQLError {
   constructor(
@@ -45,14 +45,19 @@ export class ConflictError extends AppError {
   }
 }
 
-export const formatError = (error: GraphQLError) => {
-  const extensions = error.extensions || {};
+export const formatError = (
+  formattedError: GraphQLFormattedError,
+  error: unknown
+): GraphQLFormattedError => {
+  const originalError = error instanceof GraphQLError ? error : null;
+  const extensions = originalError?.extensions || formattedError.extensions || {};
 
   return {
-    message: error.message,
-    code: extensions.code || 'INTERNAL_ERROR',
-    statusCode: extensions.statusCode || 500,
-    path: error.path,
-    locations: error.locations,
+    ...formattedError,
+    extensions: {
+      ...formattedError.extensions,
+      code: extensions.code || 'INTERNAL_ERROR',
+      statusCode: extensions.statusCode || 500,
+    },
   };
 };

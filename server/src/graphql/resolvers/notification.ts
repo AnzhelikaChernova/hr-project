@@ -121,10 +121,10 @@ export const notificationResolvers = {
   Subscription: {
     notificationReceived: {
       subscribe: (_: unknown, args: { recipientId: string }) => {
+        const iterator = pubsub.asyncIterator([NOTIFICATION_RECEIVED]);
         return {
           [Symbol.asyncIterator]: () => ({
-            async next() {
-              const iterator = pubsub.asyncIterator([NOTIFICATION_RECEIVED]);
+            async next(): Promise<IteratorResult<unknown>> {
               const result = await iterator.next();
 
               if (result.value?.notificationReceived?.recipient?.toString() === args.recipientId) {
@@ -132,10 +132,10 @@ export const notificationResolvers = {
               }
               return this.next();
             },
-            return() {
+            return(): Promise<IteratorResult<unknown>> {
               return Promise.resolve({ value: undefined, done: true });
             },
-            throw(error: Error) {
+            throw(error: Error): Promise<never> {
               return Promise.reject(error);
             },
           }),

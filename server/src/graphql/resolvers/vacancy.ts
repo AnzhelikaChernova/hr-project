@@ -8,7 +8,7 @@ import {
   updateVacancySchema,
 } from '../../utils/validators';
 
-interface VacancyFilters {
+export interface VacancyFilters {
   status?: string;
   type?: string;
   search?: string;

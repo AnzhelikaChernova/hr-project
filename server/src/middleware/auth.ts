@@ -1,4 +1,4 @@
-import jwt from 'jsonwebtoken';
+import jwt, { SignOptions } from 'jsonwebtoken';
 import { Request } from 'express';
 import { AuthUser, GraphQLContext } from '../types/context';
 import { AuthenticationError, ForbiddenError } from '../utils/errors';
@@ -16,10 +16,11 @@ export interface JwtPayload {
 }
 
 export const generateToken = (user: { id: string; email: string; role: 'HR' | 'CANDIDATE' }): string => {
+  const options: SignOptions = { expiresIn: JWT_EXPIRES_IN as jwt.SignOptions['expiresIn'] };
   return jwt.sign(
     { id: user.id, email: user.email, role: user.role },
     JWT_SECRET,
-    { expiresIn: JWT_EXPIRES_IN }
+    options
   );
 };
 

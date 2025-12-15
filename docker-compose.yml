@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   mongo:
     image: mongo:7
@@ -90,6 +88,37 @@ services:
       - hr-network
     profiles:
       - admin
+
+  # Seed database with test data
+  seed:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+      target: builder
+    container_name: hr-platform-seed
+    environment:
+      MONGO_URI: mongodb://mongo:27017/hr-platform
+    command: npx ts-node src/seed.ts
+    depends_on:
+      mongo:
+        condition: service_healthy
+    networks:
+      - hr-network
+    profiles:
+      - seed
+
+  # Run tests
+  test:
+    build:
+      context: ./server
+      dockerfile: Dockerfile.test
+    container_name: hr-platform-test
+    environment:
+      NODE_ENV: test
+    networks:
+      - hr-network
+    profiles:
+      - test
 
 volumes:
   mongo-data:

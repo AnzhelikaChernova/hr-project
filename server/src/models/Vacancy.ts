@@ -39,6 +39,12 @@ const salarySchema = new Schema(
     max: {
       type: Number,
       required: true,
+      validate: {
+        validator: function (this: { min: number }, value: number): boolean {
+          return value >= this.min;
+        },
+        message: 'Maximum salary must be greater than or equal to minimum salary',
+      },
     },
     currency: {
       type: String,
